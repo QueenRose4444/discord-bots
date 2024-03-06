@@ -1,12 +1,10 @@
 current bots
 - Notify bot
-‎ 
-‎ 
-‎ 
+
 ‎ 
 
 how the bots work
-‎ 
+
 ‎ 
 
 - notify bot
