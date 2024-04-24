@@ -70,7 +70,7 @@ async def get_latest_tiktok_video_url(username):
     else:
         return None
 
-async def check_for_new_videos(loop):
+async def check_for_new_videos(client):
     while True:
         for user_id in os.listdir(DATA_DIR):
             user_id = int(user_id)
@@ -84,7 +84,7 @@ async def check_for_new_videos(loop):
                             if latest_video_id and latest_video_id != stored_video_id:
                                 video_link = f"https://www.youtube.com/watch?v={latest_video_id}"
                                 user = client.get_user(user_id)
-                                loop.create_task(user.send(f"New video from {username} on YouTube: {video_link}")) 
+                                await user.send(f"New video from {username} on YouTube: {video_link}") 
                                 subscriptions[platform][username] = latest_video_id  
                                 save_user_subscriptions(user_id, subscriptions)
                         elif platform.lower() == "tiktok":
@@ -92,80 +92,64 @@ async def check_for_new_videos(loop):
                             stored_video_url = subscriptions.get(platform, {}).get(username)
                             if latest_video_url and latest_video_url != stored_video_url:
                                 user = client.get_user(user_id)
-                                loop.create_task(user.send(f"New video from {username} on TikTok: {latest_video_url}"))
+                                await user.send(f"New video from {username} on TikTok: {latest_video_url}")
                                 subscriptions[platform][username] = latest_video_url 
                                 save_user_subscriptions(user_id, subscriptions)
                     except Exception as e:
                         logging.error(f"Error checking for new videos for user {user_id}, username {username}: {e}")
 
         # Check for new videos every hour
-        time.sleep(3600)
+        await asyncio.sleep(3600)
 
 class MyClient(discord.Client):
     def __init__(self):
         super().__init__(intents=discord.Intents.default())
-        self.synced = False
+        self.tree = app_commands.CommandTree(self)
 
     async def on_ready(self):
         global tiktok_api
         tiktok_api = TikTokApi()
         await tiktok_api.create_sessions(ms_tokens=[MS_TOKEN], num_sessions=1, sleep_after=3)
         await self.wait_until_ready()
-        if not self.synced:
-            await tree.sync()
-            self.synced = True
-        print(f"Logged in as {self.user}")
-        self.loop.create_task(check_for_new_videos(self.loop))  # Moved this line here
 
-async def main():
-    global tiktok_api
-    tiktok_api = TikTokApi()
-    await tiktok_api.create_sessions(ms_tokens=[MS_TOKEN], num_sessions=1, sleep_after=3)
+        # Automatic syncing on startup
+        await self.tree.sync()  
+        print(f"Logged in as {self.user}. Slash commands synced!")
 
-    client = MyClient()
-    tree = app_commands.CommandTree(client)
+        # Start the background task
+        asyncio.create_task(check_for_new_videos(self)) 
 
+# Register commands directly on the tree
+@client.tree.command(name="track", description="Track a new YouTube or TikTok account")
+async def track(interaction: discord.Interaction, platform: str, username: str):
+    subscriptions = load_user_subscriptions(interaction.user.id)
+    if platform.lower() not in subscriptions:
+        subscriptions[platform.lower()] = {}
+    subscriptions[platform.lower()][username] = None
+    save_user_subscriptions(interaction.user.id, subscriptions)
+    logging.info(f"{interaction.user} is now tracking {username} on {platform}")
+    await interaction.response.send_message(f"Tracking new videos for {username} on {platform}")
 
-    @client.tree.command(name="track", description="Track a new YouTube or TikTok account for video notifications.")
-    @app_commands.describe(platform="The platform to track (YouTube or TikTok)", username="The username of the account to track")
-    async def track(interaction: discord.Interaction, platform: str, username: str):
-        subscriptions = load_user_subscriptions(interaction.user.id)
-        if platform not in subscriptions:
-            subscriptions[platform] = {}  # Use a dictionary to store username and video ID/URL
-        subscriptions[platform][username] = None  # Initialize with None for video ID/URL 
+@client.tree.command(name="list", description="List your current subscriptions.")
+async def list(interaction: discord.Interaction):
+    subscriptions = load_user_subscriptions(interaction.user.id)
+    if subscriptions:
+        message_text = "Your subscriptions:\n"
+        for platform, usernames in subscriptions.items():
+            message_text += f"**{platform.upper()}**: {', '.join(usernames.keys())}\n" 
+    else:
+        message_text = "You are not currently tracking any accounts."
+    await interaction.response.send_message(message_text)
+
+@client.tree.command(name="untrack", description="Stop tracking a YouTube or TikTok account.")
+async def untrack(interaction: discord.Interaction, platform: str, username: str):
+    subscriptions = load_user_subscriptions(interaction.user.id)
+    if platform.lower() in subscriptions and username in subscriptions[platform.lower()]:
+        del subscriptions[platform.lower()][username]
         save_user_subscriptions(interaction.user.id, subscriptions)
-        logging.info(f"{interaction.user} is now tracking {username} on {platform}")
-        await interaction.response.send_message(f"Tracking new videos for {username} on {platform}")
+        await interaction.response.send_message(f"You are no longer tracking {username} on {platform}.")
+    else:
+        await interaction.response.send_message(f"You were not tracking {username} on {platform}.")
 
-
-
-    @client.tree.command(name="list", description="List your current subscriptions.")
-    async def list(interaction: discord.Interaction):
-        subscriptions = load_user_subscriptions(interaction.user.id)
-        if subscriptions:
-            message_text = "Your subscriptions:\n"
-            for platform, usernames in subscriptions.items():
-                message_text += f"**{platform.upper()}**: {', '.join(usernames.keys())}\n" 
-        else:
-            message_text = "You are not currently tracking any accounts."
-        await interaction.response.send_message(message_text)
-
-
-
-    @client.tree.command(name="untrack", description="Stop tracking a YouTube or TikTok account.")
-    @app_commands.describe(platform="The platform to untrack (YouTube or TikTok)", username="The username of the account to stop tracking")
-    async def untrack(interaction: discord.Interaction, platform: str, username: str):
-        subscriptions = load_user_subscriptions(interaction.user.id)
-        if platform in subscriptions and username in subscriptions[platform]:
-            del subscriptions[platform][username]
-            save_user_subscriptions(interaction.user.id, subscriptions)
-            await interaction.response.send_message(f"You are no longer tracking {username} on {platform}.")
-        else:
-            await interaction.response.send_message(f"You were not tracking {username} on {platform}.")
-
-
-    # Run the bot
-    await client.start(BOT_TOKEN)
-
-if __name__ == "__main__":
-    asyncio.run(main())
+client = MyClient()
+client.run(BOT_TOKEN)
