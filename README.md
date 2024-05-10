@@ -27,7 +27,11 @@ it will then send a dm to the user who did the command after that amount of time
 
 
 
+
+
 - message scraper bot
+
+
 
 
 to get it working edit the .env file by adding your discord token
