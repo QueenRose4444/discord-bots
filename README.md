@@ -4,7 +4,10 @@ current bots
 - online or not bot - not working
 - message scraper - working
 <br>
+<br>
+<br>
 how the bots work
+<br>
 <br>
 - notify bot
 <br>
@@ -15,6 +18,7 @@ it works with command
 /notify [number (type of time {day, hour, min, sec. supports variations of them} ] [message] 
 
 it will then send a dm to the user who did the command after that amount of time has elapsed 
+<br>
 <br>
 - message scraper bot
 <br>
