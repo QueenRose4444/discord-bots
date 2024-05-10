@@ -1,22 +1,13 @@
 current bots
-
-‎ 
-
+<br>
 - Notify bot - working
 - online or not bot - not working
 - message scraper - working
-
-‎ 
-
+<br>
 how the bots work
-
-‎ 
-
+<br>
 - notify bot
-
-‎ 
-
-  
+<br>
 to get it working edit the .env file by adding your discord token
 
 it works with command 
@@ -24,20 +15,9 @@ it works with command
 /notify [number (type of time {day, hour, min, sec. supports variations of them} ] [message] 
 
 it will then send a dm to the user who did the command after that amount of time has elapsed 
-
-
-
-
-
-
-
+<br>
 - message scraper bot
-
-
-
-
-
-
+<br>
 to get it working edit the .env file by adding your discord token
 
 it works with command 
