@@ -4,8 +4,6 @@ current bots
 - online or not bot - not working
 - message scraper - working
 <br>
-<br>
-<br>
 how the bots work
 
 <br>
