@@ -1,3 +1,1 @@
-notify bot/.env
-social media notifyier bot/.env
-online or not/.env
+*.env
