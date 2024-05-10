@@ -111,5 +111,5 @@ async def check_reminders():
             except Exception as e:  
                 logging.error(f"Error sending reminder to {user}: {e}")
 
-TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+TOKEN = os.getenv("DISCORD_TOKEN")
 client.run(TOKEN)
