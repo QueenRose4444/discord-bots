@@ -2,7 +2,9 @@ current bots
 
 ‎ 
 
-- Notify bot
+- Notify bot - working
+- online or not bot - not working
+- social media notify - not working
 
 ‎ 
 
