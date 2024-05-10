@@ -7,7 +7,7 @@ current bots
 how the bots work
 
 <br>
-  - notify bot
+- notify bot
 <br>
 to get it working edit the .env file by adding your discord token
 
