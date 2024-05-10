@@ -2,8 +2,8 @@ current bots
 <br>
 
 - Notify bot - working
-- online or not bot - not working
 - message scraper - working
+- online or not bot - not working
 <br>
 
 how the bots work
