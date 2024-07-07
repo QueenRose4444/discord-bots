@@ -180,4 +180,4 @@ def save_online_times():
         json.dump(online_times, f, indent=4)
 
 # Run the bot
-bot.run(os.getenv("DISCORD_BOT_TOKEN"))
+bot.run(os.getenv("DISCORD_TOKEN"))
